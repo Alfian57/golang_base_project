@@ -21,7 +21,7 @@ func NewRefreshTokenRepository() *RefreshTokenRepository {
 }
 
 func (r *RefreshTokenRepository) Create(ctx context.Context, refreshToken *model.RefreshToken) error {
-	query := "INSERT INTO refresh_tokens(id, token_hash, user_id, expires_at) VALUES (?, ?, ?, ?)"
+	query := "INSERT INTO refresh_tokens(id, token_hash, user_id, expires_at) VALUES ($1, $2, $3, $4)"
 
 	_, err := r.db.ExecContext(ctx, query, uuid.New().String(), refreshToken.TokenHash, refreshToken.UserID, refreshToken.ExpiresAt)
 	if err != nil {
@@ -33,7 +33,7 @@ func (r *RefreshTokenRepository) Create(ctx context.Context, refreshToken *model
 
 func (r *RefreshTokenRepository) GetByTokenHash(ctx context.Context, token string) (model.RefreshToken, error) {
 	refreshToken := model.RefreshToken{}
-	query := "SELECT id, token_hash, user_id, created_at, expires_at FROM refresh_tokens WHERE token_hash = ?"
+	query := "SELECT id, token_hash, user_id, created_at, expires_at FROM refresh_tokens WHERE token_hash = $1"
 
 	err := r.db.GetContext(ctx, &refreshToken, query, token)
 	if err != nil {
@@ -47,7 +47,7 @@ func (r *RefreshTokenRepository) GetByTokenHash(ctx context.Context, token strin
 }
 
 func (r *RefreshTokenRepository) DeleteByTokenHash(ctx context.Context, refreshToken string) error {
-	query := "DELETE FROM refresh_tokens WHERE token_hash = ?"
+	query := "DELETE FROM refresh_tokens WHERE token_hash = $1"
 	result, err := r.db.ExecContext(ctx, query, refreshToken)
 
 	rowsAffected, err := result.RowsAffected()

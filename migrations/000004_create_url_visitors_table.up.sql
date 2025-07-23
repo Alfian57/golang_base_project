@@ -3,8 +3,8 @@ CREATE TABLE "url_visitors"(
     "url_id" UUID NOT NULL,
     "ip_address" VARCHAR(15) NOT NULL,
     "user_agent" VARCHAR(255) NOT NULL,
-    "created_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
-    "updated_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL
+    "created_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
+    "updated_at" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
 );
 ALTER TABLE
     "url_visitors" ADD PRIMARY KEY("id");

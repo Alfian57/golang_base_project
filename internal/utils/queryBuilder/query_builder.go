@@ -9,11 +9,12 @@ import (
 )
 
 type QueryBuilder struct {
-	baseQuery   string
-	whereClause []string
-	args        []any
-	orderBy     string
-	orderType   string
+	baseQuery     string
+	whereClause   []string
+	args          []any
+	orderBy       string
+	orderType     string
+	hasPagination bool
 }
 
 func NewQueryBuilder(baseQuery string) *QueryBuilder {
@@ -33,7 +34,8 @@ func (qb *QueryBuilder) Where(condition string, args ...any) *QueryBuilder {
 
 func (qb *QueryBuilder) Search(column, searchTerm string) *QueryBuilder {
 	if searchTerm != "" {
-		qb.whereClause = append(qb.whereClause, fmt.Sprintf("%s LIKE ?", column))
+		paramNumber := len(qb.args) + 1
+		qb.whereClause = append(qb.whereClause, fmt.Sprintf("%s LIKE $%d", column, paramNumber))
 		qb.args = append(qb.args, "%"+searchTerm+"%")
 	}
 	return qb
@@ -55,9 +57,15 @@ func (qb *QueryBuilder) Paginate(pagination dto.PaginationRequest) *QueryBuilder
 	pagination.SetDefaults()
 
 	qb.args = append(qb.args, pagination.Limit, pagination.GetOffset())
+	qb.hasPagination = true
 	return qb
 }
 
+// Build constructs the final SQL query string based on the base query, where clauses,
+// order by clause, and pagination settings. It returns the complete query string and
+// a slice of arguments to be used with parameterized queries. The method appends
+// WHERE conditions if present, applies ORDER BY if specified, and adds LIMIT/OFFSET
+// for pagination when enabled.
 func (qb *QueryBuilder) Build() (string, []any) {
 	query := qb.baseQuery
 
@@ -69,13 +77,17 @@ func (qb *QueryBuilder) Build() (string, []any) {
 		query += fmt.Sprintf(" ORDER BY %s %s", qb.orderBy, qb.orderType)
 	}
 
-	if len(qb.args) >= 2 {
-		query += " LIMIT ? OFFSET ?"
+	if qb.hasPagination {
+		limitParam := len(qb.args) - 1 // second to last arg is limit
+		offsetParam := len(qb.args)    // last arg is offset
+		query += fmt.Sprintf(" LIMIT $%d OFFSET $%d", limitParam, offsetParam)
 	}
 
 	return query, qb.args
 }
 
+// BuildCount constructs a SQL count query by appending any WHERE clauses stored in the QueryBuilder.
+// It returns the final query string and a slice of arguments to be used with the query.
 func (qb *QueryBuilder) BuildCount(countQuery string) (string, []any) {
 	query := countQuery
 

@@ -30,3 +30,9 @@ const (
 	DefaultOrderType = "ASC"
 	DefaultOrderBy   = "created_at"
 )
+
+// User Role Constants
+const (
+	UserRoleAdmin  = "admin"
+	UserRoleMember = "member"
+)

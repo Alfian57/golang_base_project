@@ -16,7 +16,9 @@ func RegisterV1Route(router *gin.RouterGroup) {
 	router.POST("/refresh", middleware.AuthMiddleware(), authHandler.Refresh)
 	router.POST("/logout", middleware.AuthMiddleware(), authHandler.Logout)
 
-	users := router.Group("users", middleware.AuthMiddleware())
+	admin := router.Group("admin", middleware.AuthMiddleware())
+
+	users := admin.Group("users")
 	{
 		users.GET("/", userHandler.GetAllUsers)
 		users.POST("/", userHandler.CreateUser)

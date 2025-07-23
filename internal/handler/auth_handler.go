@@ -79,7 +79,6 @@ func (h *AuthHandler) Refresh(ctx *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(ctx *gin.Context) {
-	// Get the refresh token from the cookie
 	refreshToken, err := ctx.Cookie("refresh_token")
 	if err != nil {
 		response.WriteErrorResponse(ctx, err)
