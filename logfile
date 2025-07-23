@@ -1,0 +1,10 @@
+{"L":"INFO","T":"2025-07-23T20:51:47.922+0700","C":"database/connection.go:36","M":"successfully connected to the database"}
+{"L":"INFO","T":"2025-07-23T20:51:47.923+0700","C":"api/main.go:61","M":"Server starting on localhost:8000"}
+{"L":"INFO","T":"2025-07-23T20:51:55.036+0700","C":"database/connection.go:36","M":"successfully connected to the database"}
+{"L":"INFO","T":"2025-07-23T20:51:55.037+0700","C":"api/main.go:61","M":"Server starting on localhost:8000"}
+{"L":"INFO","T":"2025-07-23T20:52:01.799+0700","C":"database/connection.go:36","M":"successfully connected to the database"}
+{"L":"INFO","T":"2025-07-23T20:52:01.802+0700","C":"api/main.go:61","M":"Server starting on localhost:8000"}
+{"L":"INFO","T":"2025-07-23T20:52:03.265+0700","C":"database/connection.go:36","M":"successfully connected to the database"}
+{"L":"INFO","T":"2025-07-23T20:52:03.266+0700","C":"api/main.go:61","M":"Server starting on localhost:8000"}
+{"L":"INFO","T":"2025-07-23T20:52:28.587+0700","C":"database/connection.go:36","M":"successfully connected to the database"}
+{"L":"INFO","T":"2025-07-23T20:52:28.588+0700","C":"api/main.go:61","M":"Server starting on localhost:8000"}
