@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/Alfian57/belajar-golang/internal/constants"
 	"github.com/Alfian57/belajar-golang/internal/dto"
 	errs "github.com/Alfian57/belajar-golang/internal/errors"
 	"github.com/Alfian57/belajar-golang/internal/logger"
@@ -86,7 +85,7 @@ func (s *UserService) CreateUser(ctx context.Context, request dto.CreateUserRequ
 	user := model.User{
 		Email:    request.Email,
 		Username: request.Username,
-		Role:     constants.UserRoleMember, // Default role
+		Role:     model.UserRoleMember, // Default role
 	}
 
 	// Password processing

@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Alfian57/belajar-golang/internal/constants"
 	"github.com/Alfian57/belajar-golang/internal/dto"
 	errs "github.com/Alfian57/belajar-golang/internal/errors"
 	"github.com/Alfian57/belajar-golang/internal/logger"
@@ -111,7 +110,7 @@ func (s *AuthService) Register(ctx context.Context, request dto.RegisterRequest)
 	user := model.User{
 		Email:    request.Email,
 		Username: request.Username,
-		Role:     constants.UserRoleMember,
+		Role:     model.UserRoleMember,
 	}
 	err = user.SetHashedPassword(request.Password)
 	if err != nil {

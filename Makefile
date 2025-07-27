@@ -25,3 +25,21 @@ migrate-down:
 migrate-force:
 	@read -p "Enter migration version: " version; \
 	migrate -database $(DATABASE_URL) -path migrations force $$version
+
+seed:
+	go run ./cmd/seeder
+
+seed-factory:
+	go run ./cmd/seeder -factory
+
+seed-factory-custom:
+	go run ./cmd/seeder -factory -users=50
+
+seed-build:
+	go build -o ./build/seeder ./cmd/seeder
+
+seed-run:
+	./build/seeder
+
+seed-run-factory:
+	./build/seeder -factory

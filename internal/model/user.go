@@ -7,6 +7,11 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	UserRoleAdmin  = "admin"
+	UserRoleMember = "member"
+)
+
 type User struct {
 	ID        uuid.UUID `json:"id" gorm:"type:uuid;primary_key"`
 	Email     string    `json:"email" gorm:"uniqueIndex;not null"`

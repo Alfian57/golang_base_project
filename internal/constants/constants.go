@@ -31,8 +31,7 @@ const (
 	DefaultOrderBy   = "created_at"
 )
 
-// User Role Constants
+// User Constants
 const (
-	UserRoleAdmin  = "admin"
-	UserRoleMember = "member"
+	DefaultPassword = "password"
 )
