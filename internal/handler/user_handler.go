@@ -27,6 +27,8 @@ func (h *UserHandler) GetAllUsers(ctx *gin.Context) {
 		return
 	}
 
+	query.PaginationRequest.SetDefaults()
+
 	result, err := h.service.GetAllUsers(ctx, query)
 	if err != nil {
 		response.WriteErrorResponse(ctx, err)

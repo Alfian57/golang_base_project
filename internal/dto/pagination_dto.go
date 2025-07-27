@@ -31,7 +31,7 @@ func (p *PaginationRequest) SetDefaults() {
 		p.Page = 1
 	}
 	if p.Limit <= 0 {
-		p.Limit = 10
+		p.Limit = 15
 	}
 }
 

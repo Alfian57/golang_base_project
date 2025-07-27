@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 
 	"github.com/Alfian57/belajar-golang/internal/database"
@@ -10,43 +9,57 @@ import (
 	errs "github.com/Alfian57/belajar-golang/internal/errors"
 	"github.com/Alfian57/belajar-golang/internal/logger"
 	"github.com/Alfian57/belajar-golang/internal/model"
-	"github.com/Alfian57/belajar-golang/internal/utils/queryBuilder"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
 )
 
 type UserRepository struct {
-	db *sqlx.DB
+	db *gorm.DB
 }
 
 func NewUserRepository() *UserRepository {
 	return &UserRepository{db: database.DB}
 }
 
-func (r *UserRepository) GetAll(ctx context.Context, queryParam dto.GetUsersFilter) ([]model.User, error) {
-	users := []model.User{}
-	baseQuery := "SELECT id, email, username, password, role, created_at, updated_at FROM users"
+func (r *UserRepository) GetAllWithPagination(ctx context.Context, queryParam dto.GetUsersFilter) ([]model.User, error) {
+	var users []model.User
 
-	qb := queryBuilder.NewQueryBuilder(baseQuery)
-	qb.Search("username", queryParam.Search).
-		OrderBy(queryParam.OrderBy, queryParam.OrderType).
-		Paginate(queryParam.PaginationRequest)
+	query := r.db.WithContext(ctx)
 
-	query, args := qb.Build()
-	err := r.db.SelectContext(ctx, &users, query, args...)
+	// Apply search filter
+	if queryParam.Search != "" {
+		query = query.Where("username LIKE ?", "%"+queryParam.Search+"%")
+	}
+
+	// Apply ordering
+	orderBy := queryParam.OrderBy
+	if orderBy == "" {
+		orderBy = "created_at"
+	}
+	orderType := queryParam.OrderType
+	if orderType != "ASC" && orderType != "DESC" {
+		orderType = "ASC"
+	}
+	query = query.Order(orderBy + " " + orderType)
+
+	// Apply pagination
+	query = query.Limit(queryParam.PaginationRequest.Limit).Offset(queryParam.PaginationRequest.GetOffset())
+
+	err := query.Find(&users).Error
 	return users, err
 }
 
 func (r *UserRepository) CountAll(ctx context.Context, queryParam dto.GetUsersFilter) (int64, error) {
-	baseQuery := "SELECT COUNT(*) FROM users"
-
-	qb := queryBuilder.NewQueryBuilder(baseQuery)
-	qb.Search("username", queryParam.Search)
-
-	query, args := qb.BuildCount(baseQuery)
-
 	var count int64
-	err := r.db.GetContext(ctx, &count, query, args...)
+
+	query := r.db.WithContext(ctx).Model(&model.User{})
+
+	// Apply search filter
+	if queryParam.Search != "" {
+		query = query.Where("username LIKE ?", "%"+queryParam.Search+"%")
+	}
+
+	err := query.Count(&count).Error
 	if err != nil {
 		return 0, err
 	}
@@ -58,19 +71,17 @@ func (r *UserRepository) Create(ctx context.Context, user *model.User) error {
 	user.ID = uuid.New()
 
 	logger.Log.Info("Creating user", "id", user.ID, "email", user.Email, "username", user.Username)
-	query := "INSERT INTO users(id, email, username, password, role) VALUES ($1, $2, $3, $4, $5)"
-	_, err := r.db.ExecContext(ctx, query, user.ID.String(), user.Email, user.Username, user.Password, user.Role)
+	err := r.db.WithContext(ctx).Create(user).Error
 	logger.Log.Debug(err)
 	return err
 }
 
 func (r *UserRepository) GetByID(ctx context.Context, id string) (model.User, error) {
-	user := model.User{}
-	query := "SELECT id, email, username, password, role, created_at, updated_at FROM users WHERE id = $1"
+	var user model.User
 
-	err := r.db.GetContext(ctx, &user, query, id)
+	err := r.db.WithContext(ctx).First(&user, "id = ?", id).Error
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return user, errs.ErrUserNotFound
 		}
 		return user, err
@@ -80,12 +91,11 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (model.User, er
 }
 
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (model.User, error) {
-	user := model.User{}
-	query := "SELECT id, email, username, password, role, created_at, updated_at FROM users WHERE email = $1"
+	var user model.User
 
-	err := r.db.GetContext(ctx, &user, query, email)
+	err := r.db.WithContext(ctx).First(&user, "email = ?", email).Error
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return user, errs.ErrUserNotFound
 		}
 		return user, err
@@ -95,12 +105,11 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (model.Us
 }
 
 func (r *UserRepository) GetByUsername(ctx context.Context, username string) (model.User, error) {
-	user := model.User{}
-	query := "SELECT id, email, username, password, created_at, updated_at FROM users WHERE username = $1"
+	var user model.User
 
-	err := r.db.GetContext(ctx, &user, query, username)
+	err := r.db.WithContext(ctx).First(&user, "username = ?", username).Error
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return user, errs.ErrUserNotFound
 		}
 		return user, err
@@ -110,23 +119,17 @@ func (r *UserRepository) GetByUsername(ctx context.Context, username string) (mo
 }
 
 func (r *UserRepository) Update(ctx context.Context, user *model.User) error {
-	query := "UPDATE users SET email = $1, username = $2 WHERE id = $3"
-	_, err := r.db.ExecContext(ctx, query, user.Email, user.Username, user.ID.String())
+	err := r.db.WithContext(ctx).Model(user).Select("email", "username").Updates(user).Error
 	return err
 }
 
 func (r *UserRepository) Delete(ctx context.Context, id string) error {
-	query := "DELETE FROM users WHERE id = $1"
-	result, err := r.db.ExecContext(ctx, query, id)
-	if err != nil {
-		return err
+	result := r.db.WithContext(ctx).Delete(&model.User{}, "id = ?", id)
+	if result.Error != nil {
+		return result.Error
 	}
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if rowsAffected == 0 {
+	if result.RowsAffected == 0 {
 		return errs.ErrUserNotFound
 	}
 

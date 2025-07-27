@@ -2,18 +2,17 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 
 	"github.com/Alfian57/belajar-golang/internal/database"
 	errs "github.com/Alfian57/belajar-golang/internal/errors"
 	"github.com/Alfian57/belajar-golang/internal/model"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
+	"gorm.io/gorm"
 )
 
 type RefreshTokenRepository struct {
-	db *sqlx.DB
+	db *gorm.DB
 }
 
 func NewRefreshTokenRepository() *RefreshTokenRepository {
@@ -21,9 +20,9 @@ func NewRefreshTokenRepository() *RefreshTokenRepository {
 }
 
 func (r *RefreshTokenRepository) Create(ctx context.Context, refreshToken *model.RefreshToken) error {
-	query := "INSERT INTO refresh_tokens(id, token_hash, user_id, expires_at) VALUES ($1, $2, $3, $4)"
+	refreshToken.ID = uuid.New()
 
-	_, err := r.db.ExecContext(ctx, query, uuid.New().String(), refreshToken.TokenHash, refreshToken.UserID, refreshToken.ExpiresAt)
+	err := r.db.WithContext(ctx).Create(refreshToken).Error
 	if err != nil {
 		return err
 	}
@@ -32,12 +31,11 @@ func (r *RefreshTokenRepository) Create(ctx context.Context, refreshToken *model
 }
 
 func (r *RefreshTokenRepository) GetByTokenHash(ctx context.Context, token string) (model.RefreshToken, error) {
-	refreshToken := model.RefreshToken{}
-	query := "SELECT id, token_hash, user_id, created_at, expires_at FROM refresh_tokens WHERE token_hash = $1"
+	var refreshToken model.RefreshToken
 
-	err := r.db.GetContext(ctx, &refreshToken, query, token)
+	err := r.db.WithContext(ctx).First(&refreshToken, "token_hash = ?", token).Error
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return refreshToken, errs.ErrTodoNotFound
 		}
 		return refreshToken, err
@@ -47,14 +45,11 @@ func (r *RefreshTokenRepository) GetByTokenHash(ctx context.Context, token strin
 }
 
 func (r *RefreshTokenRepository) DeleteByTokenHash(ctx context.Context, refreshToken string) error {
-	query := "DELETE FROM refresh_tokens WHERE token_hash = $1"
-	result, err := r.db.ExecContext(ctx, query, refreshToken)
+	result := r.db.WithContext(ctx).Delete(&model.RefreshToken{}, "token_hash = ?", refreshToken)
 
-	rowsAffected, err := result.RowsAffected()
-
-	if rowsAffected == 0 {
+	if result.RowsAffected == 0 {
 		return errs.ErrTodoNotFound
 	}
 
-	return err
+	return result.Error
 }

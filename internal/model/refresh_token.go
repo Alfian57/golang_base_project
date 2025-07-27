@@ -7,9 +7,13 @@ import (
 )
 
 type RefreshToken struct {
-	ID        uuid.UUID `json:"id" db:"id"`
-	UserID    uuid.UUID `json:"user_id" db:"user_id"`
-	TokenHash string    `json:"token_hash" db:"token_hash"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	ExpiresAt int64     `json:"expires_at" db:"expires_at"`
+	ID        uuid.UUID `json:"id" gorm:"type:uuid;primary_key"`
+	UserID    uuid.UUID `json:"user_id" gorm:"type:uuid;not null"`
+	TokenHash string    `json:"token_hash" gorm:"not null"`
+	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
+	ExpiresAt int64     `json:"expires_at" gorm:"not null"`
+}
+
+func (RefreshToken) TableName() string {
+	return "refresh_tokens"
 }

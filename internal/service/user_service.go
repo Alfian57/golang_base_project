@@ -30,7 +30,7 @@ func (s *UserService) GetAllUsers(ctx context.Context, query dto.GetUsersFilter)
 	defer cancel()
 
 	// Validate pagination parameters
-	users, err := s.userRepository.GetAll(ctx, query)
+	users, err := s.userRepository.GetAllWithPagination(ctx, query)
 	if err != nil {
 		logger.Log.Errorw("failed to retrieve users", "error", err)
 		return dto.PaginatedResult[model.User]{}, errs.NewAppError(500, "failed to retrieve users", err)

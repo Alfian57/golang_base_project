@@ -8,13 +8,17 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `json:"id" db:"id"`
-	Email     string    `json:"email" db:"email"`
-	Username  string    `json:"username" db:"username"`
-	Password  string    `json:"-" db:"password"`
-	Role      string    `json:"role" db:"role"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID        uuid.UUID `json:"id" gorm:"type:uuid;primary_key"`
+	Email     string    `json:"email" gorm:"uniqueIndex;not null"`
+	Username  string    `json:"username" gorm:"uniqueIndex;not null"`
+	Password  string    `json:"-" gorm:"not null"`
+	Role      string    `json:"role" gorm:"not null"`
+	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+}
+
+func (User) TableName() string {
+	return "users"
 }
 
 func (u *User) SetHashedPassword(password string) error {
