@@ -3,6 +3,8 @@ module github.com/Alfian57/belajar-golang
 go 1.24.4
 
 require (
+	github.com/bluele/factory-go v0.0.1
+	github.com/brianvoe/gofakeit/v6 v6.28.0
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.10.1
 	github.com/go-playground/validator/v10 v10.27.0
@@ -18,8 +20,6 @@ require (
 )
 
 require (
-	github.com/bluele/factory-go v0.0.1 // indirect
-	github.com/brianvoe/gofakeit/v6 v6.28.0 // indirect
 	github.com/bytedance/sonic v1.13.3 // indirect
 	github.com/bytedance/sonic/loader v0.2.4 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect

@@ -28,15 +28,28 @@ func (s *UserService) GetAllUsers(ctx context.Context, query dto.GetUsersFilter)
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	// Validate pagination parameters
-	users, err := s.userRepository.GetAllWithPagination(ctx, query)
+	// Set default ordering
+	orderBy := query.OrderBy
+	if orderBy == "" {
+		orderBy = "created_at"
+	}
+	orderType := query.OrderType
+	if orderType != "ASC" && orderType != "DESC" {
+		orderType = "ASC"
+	}
+
+	// Validate pagination parameters (SetDefaults should be called before this)
+	limit := query.PaginationRequest.Limit
+	offset := query.PaginationRequest.GetOffset()
+
+	users, err := s.userRepository.GetAllWithFilterPagination(ctx, query.Search, orderBy, orderType, limit, offset)
 	if err != nil {
 		logger.Log.Errorw("failed to retrieve users", "error", err)
 		return dto.PaginatedResult[model.User]{}, errs.NewAppError(500, "failed to retrieve users", err)
 	}
 
 	// Count total users for pagination
-	count, err := s.userRepository.CountAll(ctx, query)
+	count, err := s.userRepository.CountWithFilter(ctx, query.Search)
 	if err != nil {
 		logger.Log.Errorw("failed to count users", "error", err)
 		return dto.PaginatedResult[model.User]{}, errs.NewAppError(500, "failed to retrieve users", err)

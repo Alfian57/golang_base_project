@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/Alfian57/belajar-golang/internal/database"
-	"github.com/Alfian57/belajar-golang/internal/dto"
 	errs "github.com/Alfian57/belajar-golang/internal/errors"
 	"github.com/Alfian57/belajar-golang/internal/logger"
 	"github.com/Alfian57/belajar-golang/internal/model"
@@ -21,42 +20,50 @@ func NewUserRepository() *UserRepository {
 	return &UserRepository{db: database.DB}
 }
 
-func (r *UserRepository) GetAllWithPagination(ctx context.Context, queryParam dto.GetUsersFilter) ([]model.User, error) {
+// GetAllWithFilterPagination retrieves users with optional filters, ordering, and pagination
+func (r *UserRepository) GetAllWithFilterPagination(ctx context.Context, search string, orderBy string, orderType string, limit int, offset int) ([]model.User, error) {
 	var users []model.User
 
 	query := r.db.WithContext(ctx)
 
 	// Apply search filter
-	if queryParam.Search != "" {
-		query = query.Where("username LIKE ?", "%"+queryParam.Search+"%")
+	if search != "" {
+		query = query.Where("username LIKE ?", "%"+search+"%")
 	}
 
 	// Apply ordering
-	orderBy := queryParam.OrderBy
-	if orderBy == "" {
-		orderBy = "created_at"
+	if orderBy != "" && orderType != "" {
+		query = query.Order(orderBy + " " + orderType)
 	}
-	orderType := queryParam.OrderType
-	if orderType != "ASC" && orderType != "DESC" {
-		orderType = "ASC"
-	}
-	query = query.Order(orderBy + " " + orderType)
 
-	// Apply pagination
-	query = query.Limit(queryParam.PaginationRequest.Limit).Offset(queryParam.PaginationRequest.GetOffset())
+	// Apply limit and offset
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+	if offset > 0 {
+		query = query.Offset(offset)
+	}
 
 	err := query.Find(&users).Error
 	return users, err
 }
 
-func (r *UserRepository) CountAll(ctx context.Context, queryParam dto.GetUsersFilter) (int64, error) {
+// GetAll retrieves all users without any filters
+func (r *UserRepository) GetAll(ctx context.Context) ([]model.User, error) {
+	var users []model.User
+	err := r.db.WithContext(ctx).Find(&users).Error
+	return users, err
+}
+
+// CountWithFilter returns the total number of users matching the search criteria
+func (r *UserRepository) CountWithFilter(ctx context.Context, search string) (int64, error) {
 	var count int64
 
 	query := r.db.WithContext(ctx).Model(&model.User{})
 
 	// Apply search filter
-	if queryParam.Search != "" {
-		query = query.Where("username LIKE ?", "%"+queryParam.Search+"%")
+	if search != "" {
+		query = query.Where("username LIKE ?", "%"+search+"%")
 	}
 
 	err := query.Count(&count).Error
@@ -65,6 +72,13 @@ func (r *UserRepository) CountAll(ctx context.Context, queryParam dto.GetUsersFi
 	}
 
 	return count, nil
+}
+
+// Count returns the total number of all users
+func (r *UserRepository) Count(ctx context.Context) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&model.User{}).Count(&count).Error
+	return count, err
 }
 
 func (r *UserRepository) Create(ctx context.Context, user *model.User) error {
