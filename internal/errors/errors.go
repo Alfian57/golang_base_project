@@ -66,7 +66,8 @@ func NewFieldError(field, message string) FieldError {
 // Common errors used in the application.
 var (
 	ErrTokenNotFound        = &AppError{Code: http.StatusUnauthorized, Message: "token not found"}
-	ErrRefreshTokenNotFound = &AppError{Code: http.StatusUnauthorized, Message: "refresh token not found"}
+	ErrRefreshTokenNotFound = &AppError{Code: http.StatusUnauthorized, Message: "invalid token claims"}
+	ErrInvalidTokenClaims   = &AppError{Code: http.StatusInternalServerError, Message: "token not found"}
 
 	ErrUserNotFound  = &AppError{Code: http.StatusNotFound, Message: "user not found"}
 	ErrUsernameExist = &AppError{Code: http.StatusUnprocessableEntity, Message: "username already exists"}

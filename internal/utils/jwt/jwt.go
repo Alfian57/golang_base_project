@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Alfian57/belajar-golang/internal/config"
+	errs "github.com/Alfian57/belajar-golang/internal/errors"
 	"github.com/Alfian57/belajar-golang/internal/model"
 	"github.com/golang-jwt/jwt/v5"
 	golangJwt "github.com/golang-jwt/jwt/v5"
@@ -50,7 +51,10 @@ func ValidateAccessToken(tokenString string) (string, error) {
 	}
 
 	if claims, ok := token.Claims.(golangJwt.MapClaims); ok {
-		return claims["id"].(string), nil
+		if id, ok := claims["id"].(string); ok {
+			return id, nil
+		}
+		return "", errs.ErrInvalidTokenClaims
 	}
 
 	return "", err
@@ -68,7 +72,10 @@ func GetUserID(tokenString string) (string, error) {
 	}
 
 	if claims, ok := token.Claims.(golangJwt.MapClaims); ok {
-		return claims["id"].(string), nil
+		if id, ok := claims["id"].(string); ok {
+			return id, nil
+		}
+		return "", errs.ErrInvalidTokenClaims
 	}
 
 	return "", err

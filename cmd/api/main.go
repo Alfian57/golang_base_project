@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/Alfian57/belajar-golang/internal/config"
 	"github.com/Alfian57/belajar-golang/internal/database"
@@ -58,8 +62,39 @@ func main() {
 		Handler: router,
 	}
 
-	logger.Log.Infof("Server starting on %s", cfg.Server.Url)
-	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		logger.Log.Fatalf("Server failed to start: %v", err)
+	// Create a channel to listen for interrupt signals
+	quit := make(chan os.Signal, 1)
+	// Register the channel to receive specific signals
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	// Start server in a goroutine so it doesn't block
+	go func() {
+		logger.Log.Infof("Server starting on %s", cfg.Server.Url)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Log.Fatalf("Server failed to start: %v", err)
+		}
+		logger.Log.Info("Server stopped listening")
+	}()
+
+	logger.Log.Info("Server is ready to handle requests. Press Ctrl+C to shutdown")
+
+	// Wait for interrupt signal to gracefully shutdown the server
+	sig := <-quit
+	logger.Log.Infof("Received signal: %v. Shutting down server...", sig)
+
+	// Create a context with timeout for shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Disable keep-alives to help with graceful shutdown
+	server.SetKeepAlivesEnabled(false)
+
+	// Attempt graceful shutdown
+	if err := server.Shutdown(ctx); err != nil {
+		logger.Log.Errorf("Server forced to shutdown: %v", err)
+		os.Exit(1)
 	}
+
+	logger.Log.Info("Server gracefully stopped")
+	os.Exit(0)
 }
