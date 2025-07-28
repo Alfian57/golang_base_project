@@ -16,7 +16,7 @@ func RegisterV1Route(router *gin.RouterGroup) {
 	router.POST("/refresh", middleware.AuthMiddleware(), authHandler.Refresh)
 	router.POST("/logout", middleware.AuthMiddleware(), authHandler.Logout)
 
-	admin := router.Group("admin", middleware.AuthMiddleware())
+	admin := router.Group("admin", middleware.AuthMiddleware(), middleware.AdminMiddleware())
 
 	users := admin.Group("users")
 	{
