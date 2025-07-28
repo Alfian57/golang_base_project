@@ -36,7 +36,7 @@ func (r *RefreshTokenRepository) GetByTokenHash(ctx context.Context, token strin
 	err := r.db.WithContext(ctx).First(&refreshToken, "token_hash = ?", token).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return refreshToken, errs.ErrTodoNotFound
+			return refreshToken, errs.ErrTokenNotFound
 		}
 		return refreshToken, err
 	}
@@ -48,7 +48,7 @@ func (r *RefreshTokenRepository) DeleteByTokenHash(ctx context.Context, refreshT
 	result := r.db.WithContext(ctx).Delete(&model.RefreshToken{}, "token_hash = ?", refreshToken)
 
 	if result.RowsAffected == 0 {
-		return errs.ErrTodoNotFound
+		return errs.ErrRefreshTokenNotFound
 	}
 
 	return result.Error

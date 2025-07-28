@@ -65,12 +65,14 @@ func NewFieldError(field, message string) FieldError {
 
 // Common errors used in the application.
 var (
-	ErrRefreshTokenNotFound = &AppError{Code: http.StatusNotFound, Message: "refresh token not found"}
-	ErrUserNotFound         = &AppError{Code: http.StatusNotFound, Message: "user not found"}
-	ErrUsernameExist        = &AppError{Code: http.StatusUnprocessableEntity, Message: "username already exists"}
-	ErrTodoNotFound         = &AppError{Code: http.StatusNotFound, Message: "todo not found"}
-	ErrInternalServer       = &AppError{Code: http.StatusInternalServerError, Message: "internal server error"}
-	ErrBadRequest           = &AppError{Code: http.StatusBadRequest, Message: "bad request"}
-	ErrUnauthorized         = &AppError{Code: http.StatusUnauthorized, Message: "unauthorized"}
-	ErrForbidden            = &AppError{Code: http.StatusForbidden, Message: "forbidden"}
+	ErrTokenNotFound        = &AppError{Code: http.StatusUnauthorized, Message: "token not found"}
+	ErrRefreshTokenNotFound = &AppError{Code: http.StatusUnauthorized, Message: "refresh token not found"}
+
+	ErrUserNotFound  = &AppError{Code: http.StatusNotFound, Message: "user not found"}
+	ErrUsernameExist = &AppError{Code: http.StatusUnprocessableEntity, Message: "username already exists"}
+
+	ErrInternalServer = &AppError{Code: http.StatusInternalServerError, Message: "internal server error"}
+	ErrBadRequest     = &AppError{Code: http.StatusBadRequest, Message: "bad request"}
+	ErrUnauthorized   = &AppError{Code: http.StatusUnauthorized, Message: "unauthorized"}
+	ErrForbidden      = &AppError{Code: http.StatusForbidden, Message: "forbidden"}
 )
