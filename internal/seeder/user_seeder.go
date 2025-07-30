@@ -13,14 +13,16 @@ import (
 )
 
 type UserSeeder struct {
-	useFactory bool
-	count      int
+	userRepository *repository.UserRepository
+	useFactory     bool
+	count          int
 }
 
 func NewUserSeeder(useFactory bool, count int) *UserSeeder {
 	return &UserSeeder{
-		useFactory: useFactory,
-		count:      count,
+		userRepository: repository.NewUserRepository(),
+		useFactory:     useFactory,
+		count:          count,
 	}
 }
 
@@ -81,38 +83,36 @@ func (s *UserSeeder) seedWithFactory(ctx context.Context) error {
 }
 
 func (s *UserSeeder) createUsers(ctx context.Context, users []model.User) error {
-	userRepisitory := repository.NewUserRepository()
-
-	for i := range users {
+	for _, user := range users {
 		var err error
 
 		// Check if user already exists by username
-		_, err = userRepisitory.GetByUsername(ctx, users[i].Username)
+		_, err = s.userRepository.GetByUsername(ctx, user.Username)
 		if err != nil {
 			if !errors.Is(err, errs.ErrUserNotFound) {
-				logger.Log.Errorw("Failed to check existing user", "username", users[i].Username, "error", err)
+				logger.Log.Errorw("Failed to check existing user", "username", user.Username, "error", err)
 				return err
 			} else {
-				logger.Log.Infof("User %s already exists, skipping...", users[i].Username)
+				logger.Log.Infof("User %s already exists, skipping...", user.Username)
 				continue
 			}
 		}
 
 		// Check if user already exists by email
-		_, err = userRepisitory.GetByEmail(ctx, users[i].Email)
+		_, err = s.userRepository.GetByEmail(ctx, user.Email)
 		if err != nil {
 			if !errors.Is(err, errs.ErrUserNotFound) {
-				logger.Log.Errorw("Failed to check existing user", "email", users[i].Email, "error", err)
+				logger.Log.Errorw("Failed to check existing user", "email", user.Email, "error", err)
 				return err
 			} else {
-				logger.Log.Infof("User %s already exists, skipping...", users[i].Email)
+				logger.Log.Infof("User %s already exists, skipping...", user.Email)
 				continue
 			}
 		}
 
 		// Create user
-		if err := userRepisitory.Create(ctx, &users[i]); err != nil {
-			logger.Log.Errorw("Failed to create user", "user", users[i].Username, "error", err)
+		if err := s.userRepository.Create(ctx, &user); err != nil {
+			logger.Log.Errorw("Failed to create user", "user", user.Username, "error", err)
 			return err
 		}
 	}
