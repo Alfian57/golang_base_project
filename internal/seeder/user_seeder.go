@@ -66,13 +66,15 @@ func (s *UserSeeder) seedWithFactory(ctx context.Context) error {
 	var users []model.User
 
 	// Create 1 admin user using AdminUserFactory
-	adminUser := factory.AdminUserFactory.MustCreate().(*model.User)
+	adminFactory := factory.NewAdminFactory()
+	adminUser := adminFactory.MustCreate().(*model.User)
 	users = append(users, *adminUser)
 
 	// Create remaining users using regular UserFactory
+	memberFactory := factory.NewMemberFactory()
 	for i := 1; i < s.count; i++ {
-		user := factory.UserFactory.MustCreate().(*model.User)
-		users = append(users, *user)
+		member := memberFactory.MustCreate().(*model.User)
+		users = append(users, *member)
 	}
 
 	return s.createUsers(ctx, users)
