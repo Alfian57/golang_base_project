@@ -84,7 +84,6 @@ func (r *UserRepository) Count(ctx context.Context) (int64, error) {
 func (r *UserRepository) Create(ctx context.Context, user *model.User) error {
 	user.ID = uuid.New()
 
-	logger.Log.Info("Creating user", "id", user.ID, "email", user.Email, "username", user.Username)
 	err := r.db.WithContext(ctx).Create(user).Error
 	logger.Log.Debug(err)
 	return err

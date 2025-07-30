@@ -2,16 +2,14 @@ package seeder
 
 import (
 	"context"
+	"errors"
 
-	"github.com/Alfian57/belajar-golang/internal/constants"
-	"github.com/Alfian57/belajar-golang/internal/database"
+	errs "github.com/Alfian57/belajar-golang/internal/errors"
 	"github.com/Alfian57/belajar-golang/internal/factory"
 	"github.com/Alfian57/belajar-golang/internal/logger"
 	"github.com/Alfian57/belajar-golang/internal/model"
+	"github.com/Alfian57/belajar-golang/internal/repository"
 	"github.com/google/uuid"
-
-	"gorm.io/gorm"
-	gormLogger "gorm.io/gorm/logger"
 )
 
 type UserSeeder struct {
@@ -81,26 +79,37 @@ func (s *UserSeeder) seedWithFactory(ctx context.Context) error {
 }
 
 func (s *UserSeeder) createUsers(ctx context.Context, users []model.User) error {
+	userRepisitory := repository.NewUserRepository()
+
 	for i := range users {
-		// Check if user already exists
-		var existingUser model.User
-		err := database.DB.WithContext(ctx).Session(&gorm.Session{Logger: gormLogger.Default.LogMode(gormLogger.Silent)}).
-			Where("email = ? OR username = ?", users[i].Email, users[i].Username).First(&existingUser).Error
-		if err == nil {
-			logger.Log.Infof("User %s already exists, skipping...", users[i].Username)
-			continue
+		var err error
+
+		// Check if user already exists by username
+		_, err = userRepisitory.GetByUsername(ctx, users[i].Username)
+		if err != nil {
+			if !errors.Is(err, errs.ErrUserNotFound) {
+				logger.Log.Errorw("Failed to check existing user", "username", users[i].Username, "error", err)
+				return err
+			} else {
+				logger.Log.Infof("User %s already exists, skipping...", users[i].Username)
+				continue
+			}
 		}
 
-		if users[i].Password == "" {
-			err = users[i].SetHashedPassword(constants.DefaultPassword)
-			if err != nil {
-				logger.Log.Errorw("Failed to hash password", "user", users[i].Username, "error", err)
+		// Check if user already exists by email
+		_, err = userRepisitory.GetByEmail(ctx, users[i].Email)
+		if err != nil {
+			if !errors.Is(err, errs.ErrUserNotFound) {
+				logger.Log.Errorw("Failed to check existing user", "email", users[i].Email, "error", err)
 				return err
+			} else {
+				logger.Log.Infof("User %s already exists, skipping...", users[i].Email)
+				continue
 			}
 		}
 
 		// Create user
-		if err := database.DB.WithContext(ctx).Create(&users[i]).Error; err != nil {
+		if err := userRepisitory.Create(ctx, &users[i]); err != nil {
 			logger.Log.Errorw("Failed to create user", "user", users[i].Username, "error", err)
 			return err
 		}
